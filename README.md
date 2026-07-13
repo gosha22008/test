@@ -163,13 +163,16 @@ curl http://localhost:11434/api/chat -d '{
 
 ### Напишите пример кода на Python (с использованием LangChain или LlamaIndex) для:
 - Загрузки документов,
+> См. файл [load_documents.py](src/load_documents.py)
 - Разбивки на чанки,
+> См. файл [chunk_documents.py](src/chunk_documents.py)
 - Создания эмбеддингов (можно локально через 
 Ollama nomic-embed-text  или sentence-transformers),
+> См. файл [embeddings_documents.py](src/embeddings_documents.py)
 - Сохранения индекса,
+> См. файл [create_index.py](src/create_index.py)
 - Запроса с ретривалом.
-
-    > См. файл [rag_pipeline.py](rag_pipeline.py)
+> См. файл [retriever.py](src/retriever.py)
 
 ## ЧАСТЬ 4. Настройка и тестирование агента 
 ### Задание 4.1. Вы подключили модель и настроили RAG. Напишите системный промпт для агента, который:
