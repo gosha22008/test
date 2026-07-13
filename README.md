@@ -40,22 +40,32 @@
 • Установку Ollama.
 
     В открытом окне терминала пишем команду:
-    curl -fsSL https://ollama.com/install.sh | sh
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
     после чего начинается скачивание ollama
 
 • Команду для загрузки модели.
 
     После загрузки и установки ollama пишем команду:
-    ollama pull qwen3:14b
+
+```bash
+ollama pull qwen3:14b
+```
     начинается скачивание модели
 • Проверку работоспособности (curl-запрос к локальному API).
 
     В окне терминала пишем команду:
-    curl http://localhost:11434/api/chat -d '{
-        •   "model": "qwen3:14b",
-        •   "messages": [{"role":"user","content":"Столица России одним словом?"}],
-        •   "think": false, "stream": false
-        • }'
+
+```bash
+curl http://localhost:11434/api/chat -d '{
+    "model": "qwen3:14b",
+    "messages": [{"role":"user","content":"Столица России одним словом?"}],
+    "think": false, "stream": false
+    }'
+```
 
 Дополнительно 
 
@@ -132,7 +142,7 @@ Ollama nomic-embed-text  или sentence-transformers),
 - Сохранения индекса,
 - Запроса с ретривалом.
 
-        См. файл rag_pipline.py
+        См. файл rag_pipeline.py
 
 ## ЧАСТЬ 4. Настройка и тестирование агента 
 ### Задание 4.1. Вы подключили модель и настроили RAG. Напишите системный промпт для агента, который:
@@ -258,3 +268,7 @@ Ollama nomic-embed-text  или sentence-transformers),
         ◦ Ollama с моделью,
         ◦ агентное приложение (FastAPI),
         ◦ векторную БД
+
+```
+См. файл docker-compose.yaml      
+```  
