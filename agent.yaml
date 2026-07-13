@@ -8,12 +8,12 @@ description: >
 model:
   provider: openai_compatible
   base_url: "http://ollama:11434/v1"
-  model_name: "qwen3:14b"        # Modelfile с num_ctx=16384
+  model_name: "qwen3:14b"      
   api_key: "ollama"
   parameters:
     temperature: 0.1
     top_p: 0.9
-    num_predict: 1024
+    max_tokens: 2048
     seed: 42
 
 # ─── РОЛЬ ──────────────────────────────────────────────
