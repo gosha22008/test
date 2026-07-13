@@ -1,0 +1,30 @@
+version = 1
+revision = 3
+requires-python = ">=3.12"
+
+[[package]]
+name = "llmfit"
+version = "1.1.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/01/10f5655c385b6efb2a409bddfb3d7732a31afb204eea664aa2a1375700da/llmfit-1.1.2-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:b6b46fc100412b29fa905e007d561a2ffbeaa32767a913c425242a0084020a84", size = 5608268, upload-time = "2026-07-10T10:59:04.565Z" },
+    { url = "https://files.pythonhosted.org/packages/21/b1/1c64c354459272dbaf27c69703ad5919bb64b4e33760b7ce3012a61f4f62/llmfit-1.1.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:17cb0f494d0e9c0244fbf5c13cfd93a3f5120c34b6c7518623ff6c6dd6b861bf", size = 5405463, upload-time = "2026-07-10T10:59:07.124Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/d9/87ba54c6d6123658caebacab4387e4241e0c48ea4d6eca61d292da4a7159/llmfit-1.1.2-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:15e3c7b47d9a0c337c3b7bae149b451155703645afe663d97e897412c2fd7ec8", size = 5956849, upload-time = "2026-07-10T10:59:09.064Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/72/471edabb4a7e8b84c3003e29e4ba92d172bf69648cbabf314eff9b73dc64/llmfit-1.1.2-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:4ef14fc0dc430e3ccc4e7a5a5eaf7ce63afca9a8120833ccfbb53737592d1b78", size = 6040941, upload-time = "2026-07-10T10:59:11.413Z" },
+    { url = "https://files.pythonhosted.org/packages/de/00/ea396025ce29b4e12cfb27f86525649c75ceb5c57111a394c72a317df99c/llmfit-1.1.2-py3-none-manylinux_2_39_riscv64.whl", hash = "sha256:f3dd963c6daee71e1e50cdd9b7ff1c1731bdd6b716d583da428c75952db0dc6b", size = 6064262, upload-time = "2026-07-10T10:59:13.489Z" },
+    { url = "https://files.pythonhosted.org/packages/e2/a4/23b9410417630c437b9ade23a6bb6243a4a1d09d183114b58073d2f04b2c/llmfit-1.1.2-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:df27d71f1ddf8040799f6c088712ee92f2d307dcd643ff1b018571a616574c1b", size = 6057964, upload-time = "2026-07-10T10:59:15.623Z" },
+    { url = "https://files.pythonhosted.org/packages/79/a5/f1fff475846f8b073e1a9a281ee463895f92c7e0a55bc04d89a35d5793f7/llmfit-1.1.2-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:cf0e9c5917974f4cfe95900f0ca50a8fc3db7b20109cd90c464aba2e20d4d559", size = 6317620, upload-time = "2026-07-10T10:59:18.136Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/56/e198af97aea50d861d83e5ede169e9a1677c5a9d9cb5d07a8832aab8998a/llmfit-1.1.2-py3-none-win_amd64.whl", hash = "sha256:c67adf6ad96c8da7d86ce4dd42791e7d4b36f0c5f50fae92962f19321a3254c5", size = 5097977, upload-time = "2026-07-10T10:59:20.261Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/7b/db7ee361d500b10d1539219dd6cec303f3e89c0b6cc5c9dbc30a59317029/llmfit-1.1.2-py3-none-win_arm64.whl", hash = "sha256:ac6f3000461aec95aa7af2aa7fbd01f1fbac5bb91110cf6cd92a59e286772ee0", size = 4806664, upload-time = "2026-07-10T10:59:22.103Z" },
+]
+
+[[package]]
+name = "test"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "llmfit" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "llmfit", specifier = ">=1.1.2" }]

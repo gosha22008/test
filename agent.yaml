@@ -1,0 +1,42 @@
+name: documentation-assistant
+display_name: "Помощник по документации"
+description: >
+  Агент-консультант по внутренней документации компании. Использует RAG-инструмент
+  для поиска релевантного контекста перед ответом.
+
+# ─── МОДЕЛЬ (из Части 1) ───────────────────────────────
+model:
+  provider: openai_compatible
+  base_url: "http://ollama:11434/v1"
+  model_name: "doc-agent"        # Modelfile с num_ctx=16384
+  api_key: "ollama"
+  parameters:
+    temperature: 0.1
+    top_p: 0.9
+    num_predict: 1024
+    seed: 42
+
+# ─── РОЛЬ ──────────────────────────────────────────────
+system_prompt: |
+  {{ см. Часть 4.1 — единый источник правды для промпта }}
+
+# ─── ИНСТРУМЕНТ (RAG) ──────────────────────────────────
+tools:
+  - name: search_knowledge_base
+    description: >
+      Поиск по векторной базе внутренних регламентов. Вызывай для каждого
+      содержательного вопроса, чтобы найти релевантные фрагменты перед ответом.
+    type: http
+    endpoint: "http://agent-api:8000/search"    # реальный RAG-сервис (Часть 3)
+    parameters:
+      type: object
+      properties:
+        query: { type: string, description: "Поисковый запрос" }
+      required: [query]
+
+# ─── ЦИКЛ АГЕНТА ───────────────────────────────────────
+agent:
+  max_iterations: 5           # ограничитель, чтобы модель не зациклилась на инструменте
+  memory:
+    type: buffer_window
+    window_size: 10

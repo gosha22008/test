@@ -1,0 +1,65 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports: ["11434:11434"]
+    volumes: ["ollama_models:/root/.ollama"]   # (в типовом решении был опечатан .ollima)
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_KV_CACHE_TYPE=q8_0
+      - OLLAMA_CONTEXT_LENGTH=16384
+      - OLLAMA_NUM_PARALLEL=3
+      - OLLAMA_MAX_LOADED_MODELS=2
+      - OLLAMA_KEEP_ALIVE=-1
+      # OLLAMA_MAX_VRAM удалён — переменная игнорируется; при нужде — OLLAMA_GPU_OVERHEAD (в байтах)
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+    healthcheck:
+      test: ["CMD-SHELL", "ollama ps || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: unless-stopped
+    ports: ["6333:6333", "6334:6334"]
+    volumes: ["qdrant_storage:/qdrant/storage"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # реранкер как отдельный сервис (как в твоём ВКР — TEI)
+  reranker:
+    image: ghcr.io/huggingface/text-embeddings-inference:latest
+    command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
+    ports: ["8080:80"]
+    deploy:
+      resources:
+        reservations:
+          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+
+  agent-api:
+    build: { context: ., dockerfile: Dockerfile }
+    restart: unless-stopped
+    ports: ["8000:8000"]
+    volumes: ["./data/docs:/app/data/docs:ro"]
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - QDRANT_URL=http://qdrant:6333
+      - RERANKER_URL=http://reranker:80
+      - LLM_MODEL=doc-agent
+      - EMBED_MODEL=bge-m3
+      - QDRANT_COLLECTION=company_docs
+    depends_on:
+      ollama: { condition: service_healthy }
+      qdrant: { condition: service_healthy }
+
+volumes:
+  ollama_models: { driver: local }
+  qdrant_storage: { driver: local }
