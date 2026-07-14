@@ -168,7 +168,7 @@ curl http://localhost:11434/api/chat -d '{
 > См. файл [chunk_documents.py](src/chunk_documents.py)
 - Создания эмбеддингов (можно локально через 
 Ollama nomic-embed-text  или sentence-transformers),
-> См. файл [embeddings_documents.py](src/embeddings_documents.py)
+> См. файл [embeddings_documents.py](src/embedding_documents.py)
 - Сохранения индекса,
 > См. файл [create_index.py](src/create_index.py)
 - Запроса с ретривалом.
