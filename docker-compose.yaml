@@ -1,65 +1,116 @@
+# docker-compose.yaml — развёртывание системы (Задание 5)
+#
+# Сервисы:
+#   ollama       — сервер LLM (qwen3:14b) + эмбеддер (bge-m3) на одном порту
+#   ollama-init  — одноразовая загрузка обеих моделей
+#   qdrant       — векторная БД (dense + sparse для гибридного поиска)
+#   agent-api    — FastAPI: инструмент /search для агента
+#
+# Версии образов ЗАФИКСИРОВАНЫ (не latest) — для воспроизводимости: на любой
+# машине поднимется ровно то, что протестировано.
+#
+# Эмбеддер bge-m3 — НЕ отдельный контейнер, а модель внутри Ollama.
+# Реранкер не используется (только упоминается в README как улучшение).
+#
+# Запуск:
+#   cp .env.example .env
+#   docker compose up -d --build
+#   # индексация (запускается ВНУТРИ agent-api, пишет docstore в общий том):
+#   docker compose exec -w /app/src agent-api python create_index.py
+#   curl localhost:8000/health
+
 services:
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.31.2
     restart: unless-stopped
     ports: ["11434:11434"]
-    volumes: ["ollama_models:/root/.ollama"]   # (в типовом решении был опечатан .ollima)
+    volumes:
+      - ollama_models:/root/.ollama
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_FLASH_ATTENTION=1
-      - OLLAMA_KV_CACHE_TYPE=q8_0
-      - OLLAMA_CONTEXT_LENGTH=16384
-      - OLLAMA_NUM_PARALLEL=3
-      - OLLAMA_MAX_LOADED_MODELS=2
-      - OLLAMA_KEEP_ALIVE=-1
-      # OLLAMA_MAX_VRAM удалён — переменная игнорируется; при нужде — OLLAMA_GPU_OVERHEAD (в байтах)
+      - OLLAMA_HOST=0.0.0.0:11434        # слушать все интерфейсы
+      - OLLAMA_FLASH_ATTENTION=1         # предусловие для квантизации KV-кэша
+      - OLLAMA_KV_CACHE_TYPE=q8_0        # KV-кэш вдвое меньше, потеря ~0
+      - OLLAMA_CONTEXT_LENGTH=4096      # окно контекста для ВСЕХ моделей Ollama
+      - OLLAMA_NUM_PARALLEL=1           # 3 слота под 3 агента (умножает KV x3)
+      - OLLAMA_MAX_LOADED_MODELS=2       # LLM + эмбеддер одновременно
+      - OLLAMA_KEEP_ALIVE=-1             # не выгружать модели из VRAM
+      - OLLAMA_VULKAN=false
     deploy:
       resources:
         reservations:
-          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     healthcheck:
-      test: ["CMD-SHELL", "ollama ps || exit 1"]
+      test: ["CMD", "ollama", "ps"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 15s
+
+  # Тянет обе модели. num_ctx задаётся глобально через OLLAMA_CONTEXT_LENGTH
+  # выше — поэтому отдельная модель doc-agent (Modelfile) не нужна.
+  ollama-init:
+    image: ollama/ollama:0.31.2
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "ollama pull qwen3:14b &&
+       ollama pull bge-m3 &&
+       echo 'Модели готовы: qwen3:14b, bge-m3'"
+    restart: "no"
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.18.2
     restart: unless-stopped
     ports: ["6333:6333", "6334:6334"]
-    volumes: ["qdrant_storage:/qdrant/storage"]
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    # У образа qdrant нет curl — healthcheck через bash-редирект в TCP-порт
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/localhost/6333' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # реранкер как отдельный сервис (как в твоём ВКР — TEI)
-  reranker:
-    image: ghcr.io/huggingface/text-embeddings-inference:latest
-    command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
-    ports: ["8080:80"]
-    deploy:
-      resources:
-        reservations:
-          devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+      start_period: 10s
 
   agent-api:
-    build: { context: ., dockerfile: Dockerfile }
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports: ["8000:8000"]
-    volumes: ["./data/docs:/app/data/docs:ro"]
+    volumes:
+      - ./data/docs:/app/data/docs:ro
+      - docstore_data:/app/storage        # docstore для AutoMerging (пишет индексация, читает сервис)
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - QDRANT_URL=http://qdrant:6333
-      - RERANKER_URL=http://reranker:80
-      - LLM_MODEL=doc-agent
-      - EMBED_MODEL=bge-m3
-      - QDRANT_COLLECTION=company_docs
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_COLLECTION=${QDRANT_COLLECTION:-documents}
+      - STORAGE_DIR=/app/storage
+      - LLM_MODEL=${LLM_MODEL:-qwen3:14b}
+      - EMBED_MODEL=${EMBED_MODEL:-bge-m3}
     depends_on:
-      ollama: { condition: service_healthy }
-      qdrant: { condition: service_healthy }
+      ollama:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
 volumes:
-  ollama_models: { driver: local }
-  qdrant_storage: { driver: local }
+  ollama_models:
+  qdrant_storage:
+  docstore_data:
