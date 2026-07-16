@@ -19,7 +19,7 @@ DOCSTORE_PATH = os.path.join(STORAGE_DIR, "docstore.json")
 
 def get_hybrid_vector_store() -> QdrantVectorStore:
     """
-    Vector store с ГИБРИДНЫМ поиском (замечание ментора №3).
+    Vector store с ГИБРИДНЫМ поиском.
 
     enable_hybrid=True + fastembed_sparse_model="Qdrant/bm25": Qdrant хранит
     ДВА вектора на чанк — dense (bge-m3, семантика) и sparse (BM25, точные
