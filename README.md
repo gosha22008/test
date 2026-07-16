@@ -309,3 +309,6 @@ Ollama nomic-embed-text  или sentence-transformers),
 - векторную БД
 
 > См. файл [docker-compose.yaml](docker-compose.yaml)   
+
+## Демонстрация работы
+![data/photo/1.png](data/photo/1.png)
