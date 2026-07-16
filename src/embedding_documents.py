@@ -1,4 +1,5 @@
 from llama_index.embeddings.ollama import OllamaEmbedding
+import os
 
 
 def get_embedding_model() -> OllamaEmbedding:
@@ -10,8 +11,8 @@ def get_embedding_model() -> OllamaEmbedding:
     """
 
     return OllamaEmbedding(
-        model_name="bge-m3",
-        base_url="http://localhost:11434",
+        model_name=os.getenv("EMBED_MODEL", "bge-m3"),
+        base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
     )
 
 
